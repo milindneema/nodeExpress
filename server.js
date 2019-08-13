@@ -1,9 +1,11 @@
 const express = require('express');
+const con = require('./model/db');
+const mysql = require('mysql');
 //creating expresss ap
 const app =express();
 //create and start server  
 app.listen(3000,()=>{
-    console.log("server stATED.....");
+    console.log("SERVER STARTED.....");
     
 });
 
@@ -19,7 +21,9 @@ app.set('view engine','hbs');                   //setting extention
 //first page has no name
 //get method will run the app
 
-//config vody parse
+var userid;
+
+//config body parse
 const bodyparser =require('body-parser');
 app.use(bodyparser.json());
 app.use(bodyparser.urlencoded({
@@ -39,27 +43,60 @@ app.get('/',(request,responce)=>{
      responce.render('registration');
  });
 
+ app.get('/home',(request,responce)=>{
+    responce.render('home');
+});
+
+app.get('/send',(request,responce)=>{
+    responce.render('send',{user:userid});
+});
+
+app.get('/delete',(request,responce)=>{
+    responce.render('delete',{user:userid});
+});
+
+app.get('/change',(request,responce)=>{
+    responce.render('change',{user:userid});
+});
+
 app.post('/logincheck',(request,responce)=>{
-    var userid = request.body.uid;
+    userid = request.body.uid;
     var pass = request.body.pwd;
-    if (userid=="admin" && pass=="admin"){
-    //responce.render('index',{msg:'login success'});
-        responce.render('home');
-     } else
-    responce.render('index',{msg:'login fail'});
+    var sql = "select * from account where emailid=? and password=?"
+    var input = [userid,pass];
+    sql = mysql.format(sql,input);
+    con.query(sql,(err,result)=>{
+        if (err) throw err;
+        else if(result.length>0){
+             //responce.render('index',{msg:'login success'});
+        responce.render('home',{user:userid});
+    } else
+   responce.render('index',{msg:'login fail'});
+        
+    })
+   
 });
 
 app.post('/register',(request,responce)=>{
-    var userid = request.body.name;
+    var name = request.body.name;
     var userid = request.body.uid;
     var pass = request.body.pwd;
-    if (true)
-    responce.render('registration',{msg:'Registration success'});
-    // else
-    // responce.render('registration',{msg:'Registration fail'});
+    var sql = "insert into account(name,emailid,password) values(?,?,?);";
+    var input = [name,userid,pass];
+    sql = mysql.format(sql,input);
+    pool.query(sql, function (err1) {
+        if (err1) throw err1;
+        else{
+            responce.render('index',{msg:'Registration successful'});
+        }    
+    });
+
 });
 
-
+app.use(function(req,res){
+    res.status(404);
+    res.render('404',{title: '404: Requested Page not found'});
+});
 
 // app.get('/hello',(request,responce)=>{
 //     responce.end("<h1>hello node js</h1>");
