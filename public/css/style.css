@@ -1,0 +1,19 @@
+h1{
+    background-color: red;
+}
+
+.vertical-menu{
+    width: 200px;
+}
+
+.vertical-menu a{
+    background-color: #eee;
+    color: black;
+    display: block;
+    padding: 12px;
+    text-decoration: none;
+}
+.vertical-menu a.active{
+    background-color: #4caf50;
+    color: white;
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+</head>
+<body>
+    
+<!--<img src="images/1.jpg" alt="image"> -->
+<center>
+<h1> Login Form </h1>
+
+<hr>
+<pre>
+                {{msg}}
+<form action="/logincheck" method="post">
+    loginID     <input type="text" name="uid">
+   
+    Password    <input type="password" name="pwd">
+
+            <input type="submit" value="Login">
+
+            <a href="/registration">Click here to Register</a>
+</form>
+</pre>
+</center>
+</body>
+</html>
