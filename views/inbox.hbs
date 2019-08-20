@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Delete</title>
+    <title>Inbox</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
@@ -18,9 +18,10 @@
             </div>
             <ul class="nav navbar-nav">
                 <li><a href="/home">Home</a></li>
+                <li class="active"><a href="#">inbox</a></li>
                 <li><a href="/send">Send</a></li>
-                <li class="active"><a href="#">Delete all</a></li>
-                <li><a href="/change">change Password</a></li>
+                <li><a href="/delete">Delete all</a></li>
+                <li ><a href="/change">change Password</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#"><span class="glyphicon glyphicon-user"></span>{{user}}</a></li>
@@ -29,6 +30,30 @@
     </nav>
 
     <div class="container" style="margin-top:50px">
+        <h2>Your Inbox</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Sender</th>
+        <th>receiver</th>
+        <th>Subject</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody>
+        {{#each data}}
+      <tr>
+       <td>{{this.sender}}</td>
+       <td>{{this.receiver}}</td>
+       <td>{{this.subject}}</td>
+       <td>{{this.message}}</td>
+       <td><a href="/DeleteEmp?empid={{this.mid}}"
+    onClick="return confirm('Deleted????')"
+        class="glyphicon glyphicon-trash"></a></td
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
     </div>
 </body>
 
