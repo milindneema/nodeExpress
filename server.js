@@ -14,6 +14,15 @@ app.listen(3000,()=>{
 app.use(session({secret:"1234567"}));
 app.use(express.static('public'));
 
+//mail api 
+var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'fornodeapi@gmail.com',
+    pass: 'focusonone'
+  }
+});
 
 //config view engine
 var  path = require('path');                    //solution for doutes of servers
@@ -36,7 +45,7 @@ const redirect = (req,res,next)=>{
 //first page has no name
 //get method will run the app
 
-var userid;
+var user;
 
 //config body parse
 const bodyparser =require('body-parser');
@@ -54,12 +63,12 @@ app.get('/',(request,responce)=>{
 //     // doutes of server //1) extention //2) location
  });
 
- app.get('/registration',redirect,(request,responce)=>{
+ app.get('/registration',(request,responce)=>{
      responce.render('registration');
  });
 
  app.get('/send',redirect,(request,responce)=>{
-    responce.render('send',{user:request.session.userid});
+    responce.render('send',{user:user});
 });
 app.get('/update',redirect,(request,responce)=>{
     var id = request.query.empid;
@@ -69,18 +78,18 @@ app.get('/update',redirect,(request,responce)=>{
     con.query(sql,(err,result)=>{
         if (err) throw err;
         else{
-    responce.render('update',{data:result,user:request.session.userid});
+    responce.render('update',{data:result,user:user});
         }
 });
 
 });
 
  app.get('/home',redirect,(request,responce)=>{
-    responce.render('home',{user:request.session.userid});
+    responce.render('home',{user:user});
 });
 
 app.get('/change',redirect,(request,responce)=>{
-    responce.render('change',{user:request.session.userid});
+    responce.render('change',{user:user});
 });
 
 
@@ -94,7 +103,7 @@ app.post('/sendreq',(request,responce)=>{
     con.query(sql,(err)=>{
         if (err) throw err;
         else{
-            responce.render('send',{msg:"Message Sent",user:request.session.userid});
+            responce.render('send',{msg:"Message Sent",user:user});
         }
     });
     
@@ -113,7 +122,7 @@ app.get('/delete',(request,responce)=>{
           con.query(sql,(err,result)=>{
             if(err) throw err;
             else
-            responce.render('inbox',{data:result,msg:"Data Deleted",user:request.session.userid}); //1) extention 2) location
+            responce.render('inbox',{data:result,msg:"Data Deleted",user:user}); //1) extention 2) location
         });
     }
 
@@ -138,7 +147,7 @@ app.post('/updatedata',(request,responce)=>{
           con.query(sql,(err,result)=>{
             if(err) throw err;
             else
-            responce.render('sent',{data:result,msg:"Data updated",user:request.session.userid}); //1) extention 2) location
+            responce.render('sent',{data:result,msg:"Data updated",user:user}); //1) extention 2) location
         });
     }
 
@@ -156,17 +165,31 @@ app.post('/changepass',(request,responce)=>{
     con.query(sql,(err)=>{
         if (err) throw err;
         else{
-            responce.render('home',{msg:"Password change",user:request.session.userid});
+            var mailOptions = {
+                from: 'fornodeapi@gmail.com',
+                to: request.session.userid,
+                subject: 'account details',
+                text: 'Hello'+user+"your updated password is"+npass
+              };
+              
+              transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                  console.log(error);
+                } else {
+                  console.log('Email sent: ' + info.response);
+                }
+              });
+            responce.render('home',{msg:"Password change and Mail sent",user:user});
         }
     });
     }
     else{
-        responce.render('change',{msg:"new password  doesnot match",user:request.session.userid})
+        responce.render('change',{msg:"new password  doesnot match",user:user})
     }
 });
 
 app.post('/logincheck',(request,responce)=>{
-    userid = request.body.uid;
+    var userid = request.body.uid;
     var pass = request.body.pwd;
     var sql = "select * from account where emailid=? and password=?"
     var input = [userid,pass];
@@ -175,8 +198,9 @@ app.post('/logincheck',(request,responce)=>{
         if (err) throw err;
         else if(result.length>0){
             request.session.userid=userid;        
+            user = result[0].name;
              //responce.render('index',{msg:'login success'});
-        responce.render('home',{user:request.session.userid});
+        responce.render('home',{user:user});
     } else
    responce.render('index',{msg:'login fail'});
         
@@ -207,9 +231,7 @@ app.get('/inbox',redirect,(request,responce)=>{
     con.query(sql, function (err1,result) {
         if (err1) throw err1;
         else{
-            console.log(result);
-            
-        responce.render('inbox',{data:result,user:request.session.userid});
+        responce.render('inbox',{data:result,user:user});
         }
 });
 });
@@ -221,7 +243,7 @@ app.get('/sent',redirect,(request,responce)=>{
     con.query(sql, function (err1,result) {
         if (err1) throw err1;
         else{
-        responce.render('sent',{data:result,user:request.session.userid});
+        responce.render('sent',{data:result,user:user});
         }
 });
 });
