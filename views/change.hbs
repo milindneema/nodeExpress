@@ -20,16 +20,42 @@
                 <li><a href="/home">Home</a></li>
                 <li><a href="/inbox">inbox</a></li>
                 <li><a href="/send">Send</a></li>
-                <li><a href="/delete">Delete all</a></li>
+                
                 <li class="active"><a href="#">change Password</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="#"><span class="glyphicon glyphicon-logout"></span>logout</a></li>
+                <li class="active"><a href="">Welcome {{user}}</a></li>
+                <li><a href="/logout"><span class="glyphicon glyphicon-logout"></span>logout</a></li>
             </ul>
         </div>
     </nav>
 
     <div class="container" style="margin-top:50px">
+        <h2>Password Change</h2>
+        {{#if msg}}
+        <div class="alert alert-success alert-dismissible">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <strong>{{msg}}</strong>
+        </div>
+        {{/if}}
+
+        <br>
+        <form action="/changepass" method="POST">
+            <div class="form-group">
+                <label for="passward">old Password</label>
+                <input type="passward" class="form-control" id="name" placeholder="Enter email" name="old">
+            </div>
+            <div class="form-group">
+                <label for="passward">New Password</label>
+                <input type="text" class="form-control" id="user" placeholder="Enter email" name="new">
+            </div>
+            <div class="form-group">
+                <label for="passward">Conform Password</label>
+                <input type="passward" class="form-control" id="name" placeholder="Enter email" name="new1">
+            </div>
+            
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
     </div>
 </body>
 

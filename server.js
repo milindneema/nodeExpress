@@ -26,6 +26,13 @@ res.set('Cache-Control', 'no-cache, private, no-store,must-revalidate,max-stale=
     next();
 });
 
+const redirect = (req,res,next)=>{
+    if(!req.session.userid){
+        res.render('index');
+    }else{
+        next();
+    }
+}
 //first page has no name
 //get method will run the app
 
@@ -47,16 +54,20 @@ app.get('/',(request,responce)=>{
 //     // doutes of server //1) extention //2) location
  });
 
- app.get('/registration',(request,responce)=>{
+ app.get('/registration',redirect,(request,responce)=>{
      responce.render('registration');
  });
 
- app.get('/send',(request,responce)=>{
-    responce.render('send');
+ app.get('/send',redirect,(request,responce)=>{
+    responce.render('send',{user:request.session.userid});
 });
 
- app.get('/home',(request,responce)=>{
-    responce.render('home');
+ app.get('/home',redirect,(request,responce)=>{
+    responce.render('home',{user:request.session.userid});
+});
+
+app.get('/change',redirect,(request,responce)=>{
+    responce.render('change',{user:request.session.userid});
 });
 
 
@@ -70,23 +81,26 @@ app.post('/sendreq',(request,responce)=>{
     con.query(sql,(err)=>{
         if (err) throw err;
         else{
-            request.render('send',{msg:"Message Sent"});
+            responce.render('send',{msg:"Message Sent",user:request.session.userid});
         }
     });
     
 });
 
 app.get('/delete',(request,responce)=>{
-    var mid = request.query.mid;
+    var mid = request.query.empid;      
+    //empid is variable declared in view where delete button is created..
     var sql = "delete from mail where mid ="+mid;
     con.query(sql,(err)=>{
         if(err) throw err;
         else{
-          var sql="select * from employee";
+          var sql="select * from mail where receiver = ?;";
+          var input = [request.session.userid];
+          sql = mysql.format(sql,input);
           con.query(sql,(err,result)=>{
             if(err) throw err;
             else
-            response.render('inbox',{data:result,msg:"Data Deleted"}); //1) extention 2) location
+            responce.render('inbox',{data:result,msg:"Data Deleted",user:request.session.userid}); //1) extention 2) location
         });
     }
 
@@ -94,8 +108,24 @@ app.get('/delete',(request,responce)=>{
       
 });
 
-app.get('/change',(request,responce)=>{
-    responce.render('change',{user:userid});
+app.post('/changepass',(request,responce)=>{
+    var npass = request.body.new;
+    var ncpass = request.body.new1;
+    var old = request.body.old;
+    if(npass==ncpass){
+    var sql = "update account set password=? where emailid=? and password=?";
+    var input = [npass,request.session.userid,old];
+    sql = mysql.format(sql,input);
+    con.query(sql,(err)=>{
+        if (err) throw err;
+        else{
+            responce.render('change',{msg:"Password change",user:request.session.userid});
+        }
+    });
+    }
+    else{
+        responce.render('change',{msg:"new password  doesnot match",user:request.session.userid})
+    }
 });
 
 app.post('/logincheck',(request,responce)=>{
@@ -133,16 +163,16 @@ app.post('/register',(request,responce)=>{
 
 });
 
-app.get('/inbox',(request,responce)=>{
+app.get('/inbox',redirect,(request,responce)=>{
     var sql = "select * from mail where receiver = ?;";
-    var input = [userid];
+    var input = [request.session.userid];
     sql = mysql.format(sql,input);
     con.query(sql, function (err1,result) {
         if (err1) throw err1;
         else{
             console.log(result);
             
-        responce.render('inbox',{data:result});
+        responce.render('inbox',{data:result,user:request.session.userid});
         }
 });
 });
@@ -152,6 +182,8 @@ app.get('/logout',(request,response)=>{
     response.render('index');
     });
 
+
+// Always put in last of every file
 app.use(function(req,res){
     res.status(404);
     res.render('404',{title: '404: Requested Page not found'});
