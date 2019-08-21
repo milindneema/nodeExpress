@@ -108,6 +108,32 @@ app.get('/delete',(request,responce)=>{
       
 });
 
+app.get('/updatedata',(request,responce)=>{
+    var mid = request.query.empid;
+    var sender = request.session.userid;
+    var rec=request.body.remail;
+    var sub=request.body.subject;
+    var msg=request.body.message;      
+    //empid is variable declared in view where delete button is created..
+    var sql = "update mail set sender=?,receiver=?,subject=?,message=? where mid="+mid;
+    var input =[sender,rec,sub,msg];
+    sql = mysql.format(sql,input);
+    con.query(sql,(err)=>{
+        if(err) throw err;
+        else{
+          var sql="select * from mail where receiver = ?;";
+          var input = [request.session.userid];
+          sql = mysql.format(sql,input);
+          con.query(sql,(err,result)=>{
+            if(err) throw err;
+            else
+            responce.render('sent',{data:result,msg:"Data updated",user:request.session.userid}); //1) extention 2) location
+        });
+    }
+
+        });
+      
+});
 app.post('/changepass',(request,responce)=>{
     var npass = request.body.new;
     var ncpass = request.body.new1;
@@ -119,7 +145,7 @@ app.post('/changepass',(request,responce)=>{
     con.query(sql,(err)=>{
         if (err) throw err;
         else{
-            responce.render('change',{msg:"Password change",user:request.session.userid});
+            responce.render('home',{msg:"Password change",user:request.session.userid});
         }
     });
     }
@@ -173,6 +199,18 @@ app.get('/inbox',redirect,(request,responce)=>{
             console.log(result);
             
         responce.render('inbox',{data:result,user:request.session.userid});
+        }
+});
+});
+
+app.get('/sent',redirect,(request,responce)=>{
+    var sql = "select * from mail where sender = ?;";
+    var input = [request.session.userid];
+    sql = mysql.format(sql,input);
+    con.query(sql, function (err1,result) {
+        if (err1) throw err1;
+        else{
+        responce.render('sent',{data:result,user:request.session.userid});
         }
 });
 });
