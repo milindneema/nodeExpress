@@ -32,18 +32,14 @@
 
     <div class="container" style="margin-top:50px">
     <h2>Compose Mail</h2>
-    {{#if msg}}
-        <div class="alert alert-success alert-dismissible">
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <strong>{{msg}}</strong>
-        </div>
-        {{/if}}
 
-  <form action="/updatedata" method="POST">
-  {{#each}}
+
+{{#each data}}
+  <form action="/updatedata?empid={{this.mid}}" method="POST">
+  
    <div class="form-group">
       <label>From</label>
-      <input type="email" class="form-control" id="mailid" placeholder="Enter Receivers email Id" name="remail" value={{this.sender}} readonly>
+      <input type="email" class="form-control" id="mailid" placeholder="Enter Receivers email Id" name="email" value={{this.sender}} readonly>
     </div>
     <div class="form-group">
       <label>To</label>
@@ -58,9 +54,10 @@
     <div class="form-group">
       <textarea cols="50" rows="8" placeholder="Message" name="message">{{this.message}}</textarea>
     </div>
-    {{/each}}
-    <button type="submit" class="btn btn-primary">update</button>
+    
+    <button type="submit" class="btn btn-primary" >update</button>
   </form>
+  {{/each}}
     </div>
 </body>
 

@@ -61,6 +61,19 @@ app.get('/',(request,responce)=>{
  app.get('/send',redirect,(request,responce)=>{
     responce.render('send',{user:request.session.userid});
 });
+app.get('/update',redirect,(request,responce)=>{
+    var id = request.query.empid;
+    var sql = "select * from mail where mid=?;"
+    var input = [id];
+    sql = mysql.format(sql,input);
+    con.query(sql,(err,result)=>{
+        if (err) throw err;
+        else{
+    responce.render('update',{data:result,user:request.session.userid});
+        }
+});
+
+});
 
  app.get('/home',redirect,(request,responce)=>{
     responce.render('home',{user:request.session.userid});
@@ -108,20 +121,18 @@ app.get('/delete',(request,responce)=>{
       
 });
 
-app.get('/updatedata',(request,responce)=>{
+app.post('/updatedata',(request,responce)=>{
     var mid = request.query.empid;
-    var sender = request.session.userid;
-    var rec=request.body.remail;
     var sub=request.body.subject;
     var msg=request.body.message;      
     //empid is variable declared in view where delete button is created..
-    var sql = "update mail set sender=?,receiver=?,subject=?,message=? where mid="+mid;
-    var input =[sender,rec,sub,msg];
+    var sql = "update mail set subject=?,message=? where mid=?;";
+    var input =[sub,msg,mid];
     sql = mysql.format(sql,input);
     con.query(sql,(err)=>{
         if(err) throw err;
         else{
-          var sql="select * from mail where receiver = ?;";
+          var sql="select * from mail where sender = ?;";
           var input = [request.session.userid];
           sql = mysql.format(sql,input);
           con.query(sql,(err,result)=>{
