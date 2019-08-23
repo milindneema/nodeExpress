@@ -24,10 +24,18 @@ var transporter = nodemailer.createTransport({
   }
 });
 
-//config view engine
-var  path = require('path');                    //solution for doutes of servers
-app.set('views',path.join(__dirname,'views'));  //setting location
-app.set('view engine','hbs');                   //setting extention
+// //config view engine
+// var  path = require('path');                    //solution for doutes of servers
+// app.set('views',path.join(__dirname,'views'));  //setting location
+// app.set('view engine','hbs');                   //setting extention
+
+var hbs = require('express-handlebars');
+app.engine('hbs',hbs({
+    extname : 'hbs',
+    defaultLayout: 'mainLayout',
+    layoutsDir: __dirname+'/views/layouts/',
+}));
+app.set('view engine','hbs')
 
 // caching disabled for every route
 app.use(function(req, res, next) {
@@ -46,6 +54,7 @@ const redirect = (req,res,next)=>{
 //get method will run the app
 
 var user;
+var pic;
 
 //config body parse
 const bodyparser =require('body-parser');
@@ -68,7 +77,7 @@ app.get('/',(request,responce)=>{
  });
 
  app.get('/send',redirect,(request,responce)=>{
-    responce.render('send',{user:user});
+    responce.render('send',{user:user,img:pic});
 });
 app.get('/update',redirect,(request,responce)=>{
     var id = request.query.empid;
@@ -78,18 +87,21 @@ app.get('/update',redirect,(request,responce)=>{
     con.query(sql,(err,result)=>{
         if (err) throw err;
         else{
-    responce.render('update',{data:result,user:user});
+    responce.render('update',{data:result,user:user,img:pic});
         }
 });
 
 });
 
  app.get('/home',redirect,(request,responce)=>{
-    responce.render('home',{user:user});
+    console.log(pic);
+    responce.render('home',{user:user,img:pic});
+    
+    
 });
 
 app.get('/change',redirect,(request,responce)=>{
-    responce.render('change',{user:user});
+    responce.render('change',{user:user,img:pic});
 });
 
 
@@ -103,7 +115,7 @@ app.post('/sendreq',(request,responce)=>{
     con.query(sql,(err)=>{
         if (err) throw err;
         else{
-            responce.render('send',{msg:"Message Sent",user:user});
+            responce.render('send',{msg:"Message Sent",user:user,img:pic});
         }
     });
     
@@ -122,7 +134,7 @@ app.get('/delete',(request,responce)=>{
           con.query(sql,(err,result)=>{
             if(err) throw err;
             else
-            responce.render('inbox',{data:result,msg:"Data Deleted",user:user}); //1) extention 2) location
+            responce.render('inbox',{data:result,msg:"Data Deleted",user:user,img:pic}); //1) extention 2) location
         });
     }
 
@@ -147,7 +159,7 @@ app.post('/updatedata',(request,responce)=>{
           con.query(sql,(err,result)=>{
             if(err) throw err;
             else
-            responce.render('sent',{data:result,msg:"Data updated",user:user}); //1) extention 2) location
+            responce.render('sent',{data:result,msg:"Data updated",user:user,img:pic}); //1) extention 2) location
         });
     }
 
@@ -169,7 +181,7 @@ app.post('/changepass',(request,responce)=>{
                 from: 'fornodeapi@gmail.com',
                 to: request.session.userid,
                 subject: 'account details',
-                text: 'Hello'+user+"your updated password is"+npass
+                text: 'Hello '+user+" your updated password is "+npass,
               };
               
               transporter.sendMail(mailOptions, function(error, info){
@@ -179,12 +191,12 @@ app.post('/changepass',(request,responce)=>{
                   console.log('Email sent: ' + info.response);
                 }
               });
-            responce.render('home',{msg:"Password change and Mail sent",user:user});
+            responce.render('home',{msg:"Password change and Mail sent",user:user,img:pic});
         }
     });
     }
     else{
-        responce.render('change',{msg:"new password  doesnot match",user:user})
+        responce.render('change',{msg:"new password  doesnot match",user:user,img:pic})
     }
 });
 
@@ -199,29 +211,47 @@ app.post('/logincheck',(request,responce)=>{
         else if(result.length>0){
             request.session.userid=userid;        
             user = result[0].name;
+            pic = result[0].img;
              //responce.render('index',{msg:'login success'});
-        responce.render('home',{user:user});
+        responce.render('home',{user:user,img:pic});
     } else
    responce.render('index',{msg:'login fail'});
         
     })
    
 });
+//for file uploading
+const upload=require('express-fileupload');
+app.use(upload());
 
 app.post('/register',(request,responce)=>{
+    console.log(request.files);
+    if(request.files)
+    {
     var name = request.body.name;
     var userid = request.body.uid;
     var pass = request.body.pwd;
-    var sql = "insert into account(name,emailid,password) values(?,?,?);";
-    var input = [name,userid,pass];
-    sql = mysql.format(sql,input);
-    con.query(sql, function (err1) {
-        if (err1) throw err1;
-        else{
-            responce.render('index',{msg:'Registration successful'});
-        }    
-    });
+    var random =Math.random().toString(36).slice(-8);
 
+    var alldata = request.files.img;
+    var filename = alldata.name;
+    var altfname = random+'_'+filename;
+    alldata.mv('./public/upload/'+altfname,(err)=>{
+        if (err) throw err;
+        else{
+            var sql = "insert into account(name,emailid,password,img) values(?,?,?,?);";
+            var input = [name,userid,pass,altfname];
+            sql = mysql.format(sql,input);
+            con.query(sql, function (err1) {
+                if (err1) throw err1;
+                else{
+                    responce.render('index',{msg1:'Registration successful and file Uploaded'});
+                }    
+            });
+        }
+    });
+   
+}
 });
 
 app.get('/inbox',redirect,(request,responce)=>{
@@ -231,7 +261,7 @@ app.get('/inbox',redirect,(request,responce)=>{
     con.query(sql, function (err1,result) {
         if (err1) throw err1;
         else{
-        responce.render('inbox',{data:result,user:user});
+        responce.render('inbox',{data:result,user:user,img:pic});
         }
 });
 });
@@ -243,7 +273,7 @@ app.get('/sent',redirect,(request,responce)=>{
     con.query(sql, function (err1,result) {
         if (err1) throw err1;
         else{
-        responce.render('sent',{data:result,user:user});
+        responce.render('sent',{data:result,user:user,img:pic});
         }
 });
 });
